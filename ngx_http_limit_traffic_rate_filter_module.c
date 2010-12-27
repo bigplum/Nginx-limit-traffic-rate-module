@@ -249,7 +249,7 @@ static ngx_int_t
     lircf = ngx_http_get_module_loc_conf(r, ngx_http_limit_traffic_rate_filter_module);
 
     if (lircf->shm_zone == NULL) {
-        return NGX_DECLINED;
+        return ngx_http_next_body_filter(r, in);
     }
 
     ctx = lircf->shm_zone->data;
@@ -257,13 +257,13 @@ static ngx_int_t
     vv = ngx_http_get_indexed_variable(r, ctx->index);
 
     if (vv == NULL || vv->not_found) {
-        return NGX_DECLINED;
+        return ngx_http_next_body_filter(r, in);
     }
 
     len = vv->len;
 
     if (len == 0) {
-        return NGX_DECLINED;
+        return ngx_http_next_body_filter(r, in);
     }
 
     if (len > 1024) {
@@ -271,7 +271,7 @@ static ngx_int_t
                       "the value of the \"%V\" variable "
                       "is more than 1024 bytes: \"%v\"",
                       &ctx->var, vv);
-        return NGX_DECLINED;
+        return ngx_http_next_body_filter(r, in);
     }
 
     hash = ngx_crc32_short(vv->data, len);
@@ -323,7 +323,7 @@ done:
 
     ngx_shmtx_unlock(&shpool->mutex);
 
-    return ngx_http_next_body_filter(r, in);;
+    return ngx_http_next_body_filter(r, in);
 }
 
 static ngx_int_t
