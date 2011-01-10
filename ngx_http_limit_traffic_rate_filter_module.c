@@ -451,6 +451,7 @@ ngx_http_limit_traffic_rate_filter_log_handler(ngx_http_request_t *r)
                 for(; p; ){
                     tr = ngx_queue_data(p, ngx_http_limit_traffic_rate_filter_request_queue_t, rq); 
                     if(tr->r == r){
+                        tr->r = NULL;
                         ngx_queue_remove(p);
                         ngx_slab_free_locked(shpool, tr);
                         goto done;
@@ -669,7 +670,9 @@ ngx_http_limit_traffic_rate_filter_cleanup(void *data)
                 ngx_queue_remove(c);
             }
             tr = ngx_queue_data(c, ngx_http_limit_traffic_rate_filter_request_queue_t, rq); 
-            ngx_slab_free_locked(shpool, tr);
+            if (!tr->r){
+                ngx_slab_free_locked(shpool, tr);
+            }
 
             if(ngx_queue_last(&lir->rq_top) == p){
                 break;
