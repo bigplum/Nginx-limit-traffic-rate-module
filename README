@@ -10,11 +10,6 @@ limit connection number by given variable. If the client is a browser, it only
 open one connection to the server. The speed will be limited to limit_rate, unless
 the client is a multi-thread download tool.
 
-The limit_traffic_rate module record connection numbers by the variable like 
-limit_conn module, and set limit_rate to limit_traffic_rate/cur_conn_number. So
-if client is a browser, the download max rate will be limit_traffic_rate. If client
-is a multi-thread tool, the total rate also be limited to limit_traffic_rate.
-
 The limit_traffic_rate module need to use a share memory pool. Directive syntax
 is same to limit_zone. 
 
@@ -28,3 +23,8 @@ is same to limit_zone.
         }
     }
 
+Changelogs
+  v0.2 
+    *   modify limit mothod, rate = (limit - last_rate)/conn + last_rate
+  v0.1
+    *   first release
