@@ -366,11 +366,7 @@ static ngx_int_t
 done:
 
     ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "limit traffic rate: %08XD %d %d %d %d %d", node->key, r->limit_rate, 
-                   (int)lircf->limit_traffic_rate,
-                   (int)sent_sum/( ngx_time() - lir->start_sec + 1), 
-                   (int)lir->conn, 
-                   (int)r->connection->sent/(ngx_time()  - lir->start_sec + 1) );
+                   "limit traffic rate: %08XD %d", node->key, r->limit_rate);
 
     ngx_shmtx_unlock(&shpool->mutex);
 
