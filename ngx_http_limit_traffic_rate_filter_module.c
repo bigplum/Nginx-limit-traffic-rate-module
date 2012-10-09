@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Evan Miller
+ * Copyright (C) bigplum@gmail.com
  */
 
 #include <ngx_config.h>
