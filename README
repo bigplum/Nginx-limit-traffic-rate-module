@@ -10,14 +10,15 @@ could limit connection number by given variable. If the client is a browser,
  it only open one connection to the server. The speed will be limited to 
 limit_rate, unless the client is a multi-thread download tool.
 
-Limit_traffic_rate module provides a method to limit the whole download rate
- to a client IP or by a download URL, even there are many connections. The 
-condition could be defined by the following directive.
+Limit_traffic_rate module provides a method to limit the total download rate
+ by client IP or download URL, even there are several connections. The 
+limit condition could be defined by the following directive.
 
 The limit_traffic_rate module need to use a share memory pool. Directive 
 syntax is same to limit_zone. 
 
     http {
+        #limit_traffic_rate_zone   rate $request_uri 32m;
         limit_traffic_rate_zone   rate $remote_addr 32m;
         
         server {
@@ -29,12 +30,15 @@ syntax is same to limit_zone.
 
 Changelogs
   v0.2 
-    *   modify limit mothod, rate = (limit - last_rate)/conn + last_rate
+    *   modify algorithm, rate = (limit - last_rate)/conn + last_rate
   v0.1
     *   first release
 
 License
 =====
+
+Same as nginx:
+
 /* 
  * Copyright (C) 2010 Simon(bigplum@gmail.com)
  *
