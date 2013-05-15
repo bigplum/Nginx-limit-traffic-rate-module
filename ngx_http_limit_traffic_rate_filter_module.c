@@ -261,9 +261,10 @@ done:
 static ngx_int_t
     ngx_http_limit_traffic_rate_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 {
-    size_t                          len;
-    uint32_t                        hash;
-    ngx_int_t                       rc;
+    size_t                                   len;
+    time_t                                   sec;
+    uint32_t                                hash;
+    ngx_int_t                               rc, num;
     ngx_slab_pool_t                *shpool;
     ngx_rbtree_node_t              *node, *sentinel;
     ngx_http_variable_value_t      *vv;
@@ -345,12 +346,21 @@ static ngx_int_t
                     }
                     p = ngx_queue_next(p);
                 }
+
+                sec = ngx_time() - lir->start_sec + 1;
+                sec = sec > 0 ? sec : 1;
+                num =lircf->limit_traffic_rate - sent_sum / sec;
+                num =num / lir->conn + r->connection->sent / sec;
+
+                num = num > 0 ? num : 1024;
+                num = ((size_t)num >lircf->limit_traffic_rate) ? (ngx_int_t)lircf->limit_traffic_rate : num;
+
+                r->limit_rate = num;
                 
-                r->limit_rate = (lircf->limit_traffic_rate - sent_sum/
-                                        ( ngx_time() - lir->start_sec + 1) ) /lir->conn + 
-                                        r->connection->sent/(ngx_time()  - lir->start_sec + 1);
-                r->limit_rate = r->limit_rate > lircf->limit_traffic_rate ? 
-                                        lircf->limit_traffic_rate : r->limit_rate;
+                ngx_log_debug5(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                     "limit traffic d:%z n:%O c:%d r:%z:::%z", lircf->limit_traffic_rate, 
+                            sent_sum, lir->conn, lir->start_sec,r->limit_rate);
+                
                 goto done;
             }
 
