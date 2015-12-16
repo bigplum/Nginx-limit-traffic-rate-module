@@ -44,6 +44,7 @@ typedef struct {
     u_short              len;
     u_short             conn;
     time_t              start_sec;
+    size_t session_limit_rate;
     ngx_queue_t     rq_top;
     u_char              data[1];
 } ngx_http_limit_traffic_rate_filter_node_t;
@@ -226,7 +227,11 @@ ngx_http_limit_traffic_rate_filter_handler(ngx_http_request_t *r)
     lir->len = (u_short) len;
     lir->conn = 1;
     lir->start_sec = r->start_sec;
-    
+/*
+ * 세션별 limit_rate 설정 값이 서버별 설정보다 크다면, 서버별 설정값을 사용한다.
+ */
+   lir->session_limit_rate = (r->limit_rate > lircf->limit_traffic_rate ? lircf->limit_traffic_rate : r->limit_rate); 
+
     ngx_queue_init(&(lir->rq_top));
     ngx_http_limit_traffic_rate_filter_request_queue_t  *req;
     req = ngx_slab_alloc_locked(shpool, sizeof(ngx_http_limit_traffic_rate_filter_request_queue_t));
@@ -264,7 +269,8 @@ static ngx_int_t
     size_t                                   len;
     time_t                                   sec;
     uint32_t                                hash;
-    ngx_int_t                               rc, num;
+    ngx_int_t                               rc;
+    size_t num;
     ngx_slab_pool_t                *shpool;
     ngx_rbtree_node_t              *node, *sentinel;
     ngx_http_variable_value_t      *vv;
@@ -272,7 +278,7 @@ static ngx_int_t
     ngx_http_limit_traffic_rate_filter_node_t     *lir;
     ngx_http_limit_traffic_rate_filter_conf_t     *lircf;
     off_t sent_sum = 0;
-    
+
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "limit traffic rate filter");
     
     lircf = ngx_http_get_module_loc_conf(r, ngx_http_limit_traffic_rate_filter_module);
@@ -349,13 +355,14 @@ static ngx_int_t
 
                 sec = ngx_time() - lir->start_sec + 1;
                 sec = sec > 0 ? sec : 1;
-                num =lircf->limit_traffic_rate - sent_sum / sec;
+                num = lircf->limit_traffic_rate - sent_sum / sec;
                 num =num / lir->conn + r->connection->sent / sec;
 
                 num = num > 0 ? num : 1024;
-                num = ((size_t)num >lircf->limit_traffic_rate) ? (ngx_int_t)lircf->limit_traffic_rate : num;
+                num = (num > lircf->limit_traffic_rate) ? lircf->limit_traffic_rate : num;
 
-                r->limit_rate = num;
+               // r->limit_rate = num;
+               r->limit_rate = ( lir->session_limit_rate > num ? num : lir->session_limit_rate);
                 
                 ngx_log_debug5(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                      "limit traffic d:%z n:%O c:%d r:%z:::%z", lircf->limit_traffic_rate, 
