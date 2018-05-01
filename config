@@ -1,3 +1,22 @@
 ngx_addon_name=ngx_http_limit_traffic_rate_filter_module
-HTTP_AUX_FILTER_MODULES="$HTTP_AUX_FILTER_MODULES ngx_http_limit_traffic_rate_filter_module"
-NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/ngx_http_limit_traffic_rate_filter_module.c"
+
+TRAFFIC_MODULE_SRCS="                                                         \
+                $ngx_addon_dir/src/ngx_http_limit_traffic_rate_filter_module.c    \
+                "
+
+TRAFFIC_MODULE_DEPS=""
+
+if test -n "$ngx_module_link"; then
+    ngx_module_type=HTTP_AUX_FILTER
+    ngx_module_name=$ngx_addon_name
+    ngx_module_incs=
+    ngx_module_deps="$TRAFFIC_MODULE_DEPS"
+    ngx_module_srcs="$TRAFFIC_MODULE_SRCS"
+    ngx_module_libs=
+
+    . auto/module
+else
+    HTTP_AUX_FILTER_MODULES="$HTTP_AUX_FILTER_MODULES $ngx_addon_name"
+    NGX_ADDON_SRCS="$NGX_ADDON_SRCS $TRAFFIC_MODULE_SRCS"
+    NGX_ADDON_DEPS="$NGX_ADDON_DEPS $TRAFFIC_MODULE_DEPS"
+fi
